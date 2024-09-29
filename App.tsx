@@ -1,118 +1,142 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
 import {
-  SafeAreaView,
+  Dimensions,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import {Page} from './components';
+import {useSharedValue} from 'react-native-reanimated';
+import {useRef, useState} from 'react';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/FontAwesome5';
+// import Icon from 'react-native-vector-icons/FontAwesome5';
+const {width} = Dimensions.get('window');
+const data = [
+  {
+    key: '1',
+    name: 'BANANA',
+    images: ['bannana', 'bannana1'],
+    colors: ['#f8e68e', '#eaba41'],
+  },
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  {
+    key: '2',
+    name: 'GREENAPPLE',
+    images: ['greenapple', 'greenapple1'],
+    colors: ['#c5f095', '#71b609'],
+  },
+  {
+    key: '3',
+    name: 'STRAWBERRY',
+    images: ['strawberry', 'strawberry1'],
+    colors: ['#e293ab', '#eb3e77'],
+  },
+  {
+    key: '4',
+    name: 'CARAMEL',
+    images: ['caramel', 'caramel1'],
+    colors: ['#edc68c', '#ec9a17'],
+  },
+];
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+const App = () => {
+  const translateX = useSharedValue(0);
+  const [findex, setFindex] = useState(3);
+  const scrollRef = useRef(null);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+  const scrollHandler = (event: any) => {
+    translateX.value = event.nativeEvent.contentOffset.x;
+  };
+  const scrollToIndex = (index: any) => {
+    setFindex(index);
+    scrollRef.current?.scrollTo({x: index * width, animated: true});
+  };
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const onMomentumScrollEnd = (event: any) => {
+    const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+    setFindex(newIndex);
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle={'default'} />
       <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        scrollEventThrottle={16}
+        onScroll={scrollHandler}
+        onMomentumScrollEnd={onMomentumScrollEnd}
+        showsHorizontalScrollIndicator={false}>
+        {data.map((item, index) => (
+          <Page
+            key={item.key}
+            item={item}
+            translateX={translateX}
+            index={index}
+          />
+        ))}
       </ScrollView>
+      <View style={styles.btns}>
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={() => {
+            if (findex > 0) {
+              scrollToIndex(findex - 1);
+            }
+          }}>
+          <Ionicons
+            name="chevron-left"
+            size={20}
+            color={data[findex].colors[0]}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={() => {
+            if (findex < data.length - 1) {
+              scrollToIndex(findex + 1);
+            }
+          }}>
+          <Ionicons
+            name="chevron-right"
+            size={20}
+            color={data[findex].colors[0]}
+          />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+};
 
 export default App;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btns: {
+    position: 'absolute',
+    bottom: 40,
+    display: 'flex',
+    width: width,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+  },
+  btn: {
+    backgroundColor: '#ffffff',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 100,
+    borderColor: 'grey',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+});
